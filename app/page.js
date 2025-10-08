@@ -1,8 +1,5 @@
-import Image from "next/image";
+import { Button } from "@/components/ui/button";import Image from "next/image";
 
 export default function Home() {
-  return (
-    <div>subsribe to krish trambadiya
-    </div>
-  );
+  return <Button variant="destructive">subsribe to krish trambadiya</Button>;
 }
