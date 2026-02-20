@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { createAccount } from "@/action/dashboard";
+import { createAccount } from "@/action/accounts";
 import { accountSchema } from "@/app/lib/schema";
 
 export function CreateAccountDrawer({ children }) {
