@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getUserAccounts } from "@/action/dashboard";
+import { getUserAccounts } from "@/action/accounts";
 import { getDashboardData } from "@/action/dashboard";
 import { getCurrentBudget } from "@/action/budget";
 import { AccountCard } from "./components/account-card";

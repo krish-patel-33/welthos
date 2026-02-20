@@ -1,4 +1,4 @@
-import { getUserAccounts } from "@/action/dashboard";
+import { getUserAccounts } from "@/action/accounts";
 import { defaultCategories } from "@/data/categories";
 import { AddTransactionForm } from "../components/transaction-form";
 import { getTransaction } from "@/action/transaction";
