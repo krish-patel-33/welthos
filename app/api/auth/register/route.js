@@ -39,7 +39,8 @@ export async function POST(req) {
 
         const token = await signToken({ userId: user.id, email: user.email });
 
-        cookies().set("token", token, {
+        const cookieStore = await cookies();
+        cookieStore.set("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             maxAge: 60 * 60 * 24, // 1 day
