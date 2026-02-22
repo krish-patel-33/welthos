@@ -3,14 +3,13 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider  = "mongodb"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  email         String        @unique
   password      String
   name          String?
   imageUrl      String?
@@ -24,12 +23,12 @@ model User {
 }
 
 model Account {
-  id           String        @id @default(uuid())
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
   name         String
   type         AccountType
-  balance      Decimal       @default(0) // will ask inital balance while creating an account
+  balance      Float         @default(0) // Float is better for MongoDB
   isDefault    Boolean       @default(false)
-  userId       String
+  userId       String        @db.ObjectId
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
   createdAt    DateTime      @default(now())
@@ -40,9 +39,9 @@ model Account {
 }
 
 model Transaction {
-  id                String            @id @default(uuid())
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
   type             TransactionType
-  amount           Decimal
+  amount           Float
   description      String?
   date             DateTime
   category         String           
@@ -52,9 +51,9 @@ model Transaction {
   nextRecurringDate DateTime?         // Next date for recurring transaction
   lastProcessed    DateTime?         // Last time this recurring transaction was processed
   status           TransactionStatus  @default(COMPLETED)
-  userId           String
+  userId           String            @db.ObjectId
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accountId        String
+  accountId        String            @db.ObjectId
   account          Account           @relation(fields: [accountId], references: [id], onDelete: Cascade)
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
@@ -64,12 +63,11 @@ model Transaction {
   @@map("transactions")
 }
 
-
 model Budget {
-  id          String       @id @default(uuid())
-  amount      Decimal
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  amount      Float
   lastAlertSent DateTime?  // Track when the last alert was sent
-  userId      String       @unique
+  userId      String       @unique @db.ObjectId
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
