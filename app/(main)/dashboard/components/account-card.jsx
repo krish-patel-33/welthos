@@ -26,15 +26,17 @@ export function AccountCard({ account }) {
     error,
   } = useFetch(updateDefaultAccount);
 
-  const handleDefaultChange = async (event) => {
-    event.preventDefault(); // Prevent navigation
-
-    if (isDefault) {
-      toast.warning("You need atleast 1 default account");
-      return; // Don't allow toggling off the default account
+  const handleDefaultChange = async (checked) => {
+    // If the account is already default, we can't toggle it off directly. 
+    // They must toggle another account to ON to automatically switch others OFF.
+    if (!checked && isDefault) {
+      toast.warning("You need at least 1 default account");
+      return;
     }
 
-    await updateDefaultFn(id);
+    if (checked) {
+      await updateDefaultFn(id);
+    }
   };
 
   useEffect(() => {
@@ -56,11 +58,16 @@ export function AccountCard({ account }) {
           <CardTitle className="text-sm font-medium capitalize">
             {name}
           </CardTitle>
-          <Switch
-            checked={isDefault}
-            onClick={handleDefaultChange}
-            disabled={updateDefaultLoading}
-          />
+          <div onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}>
+            <Switch
+              checked={isDefault}
+              onCheckedChange={handleDefaultChange}
+              disabled={updateDefaultLoading}
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
