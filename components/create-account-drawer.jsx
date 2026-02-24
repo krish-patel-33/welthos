@@ -170,7 +170,7 @@ export function CreateAccountDrawer({ children }) {
               </DrawerClose>
               <Button
                 type="submit"
-                className="flex-1"
+                className="flex-1 bg-black text-white hover:bg-gray-800"
                 disabled={createAccountLoading}
               >
                 {createAccountLoading ? (
