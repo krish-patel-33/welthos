@@ -4,7 +4,7 @@ import Header from "@/components/header";
 
 import { Toaster } from "sonner";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], display: 'swap' });
 
 export const metadata = {
   title: "Welth",

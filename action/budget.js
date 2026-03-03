@@ -44,10 +44,8 @@ export async function getCurrentBudget(accountId) {
     });
 
     return {
-      budget: budget ? { ...budget, amount: budget.amount.toNumber() } : null,
-      currentExpenses: expenses._sum.amount
-        ? expenses._sum.amount.toNumber()
-        : 0,
+      budget: budget ? { ...budget, amount: budget.amount } : null,
+      currentExpenses: expenses._sum.amount || 0,
     };
   } catch (error) {
     console.error("Error fetching budget:", error);
@@ -77,7 +75,7 @@ export async function updateBudget(amount) {
     revalidatePath("/dashboard");
     return {
       success: true,
-      data: { ...budget, amount: budget.amount.toNumber() },
+      data: { ...budget, amount: budget.amount },
     };
   } catch (error) {
     console.error("Error updating budget:", error);

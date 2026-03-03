@@ -2,12 +2,12 @@ import { Suspense } from "react";
 import { getUserAccounts } from "@/action/accounts";
 import { getDashboardData } from "@/action/dashboard";
 import { getCurrentBudget } from "@/action/budget";
-import { AccountCard } from "./components/account-card";
+import { AccountCard } from "./_components/account-card";
 import { CreateAccountDrawer } from "@/components/create-account-drawer";
-import { BudgetProgress } from "./components/budget-progress";
+import { BudgetProgress } from "./_components/budget-progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus } from "lucide-react";
-import { DashboardOverview } from "./components/transaction-overview";
+import { DashboardOverview } from "./_components/transaction-overview";
 
 export default async function DashboardPage() {
   const [accounts, transactions] = await Promise.all([
