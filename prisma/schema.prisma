@@ -8,16 +8,18 @@ datasource db {
 }
 
 model User {
-  id            String        @id @default(auto()) @map("_id") @db.ObjectId
-  email         String        @unique
-  password      String
-  name          String?
-  imageUrl      String?
-  transactions  Transaction[]
-  accounts      Account[]
-  budgets       Budget[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id               String        @id @default(auto()) @map("_id") @db.ObjectId
+  email            String        @unique
+  password         String
+  name             String?
+  imageUrl         String?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  transactions     Transaction[]
+  accounts         Account[]
+  budgets          Budget[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
   @@map("users")
 }
