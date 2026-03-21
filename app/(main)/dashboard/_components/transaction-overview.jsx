@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { defaultCategories } from "@/data/categories";
 
 import {
   Select,
@@ -36,6 +37,18 @@ export function DashboardOverview({ accounts, transactions }) {
   const [selectedAccountId, setSelectedAccountId] = useState(
     accounts.find((a) => a.isDefault)?.id || accounts[0]?.id
   );
+
+  // Create category map for ID to name conversion
+  const categoryMap = defaultCategories.reduce((acc, cat) => {
+    acc[cat.id] = cat.name;
+    return acc;
+  }, {});
+
+  // Create category color map
+  const categoryColorMap = defaultCategories.reduce((acc, cat) => {
+    acc[cat.id] = cat.color;
+    return acc;
+  }, {});
 
   // Filter transactions for selected account
   const accountTransactions = transactions.filter(
@@ -70,9 +83,10 @@ export function DashboardOverview({ accounts, transactions }) {
 
   // Format data for pie chart
   const pieChartData = Object.entries(expensesByCategory).map(
-    ([category, amount]) => ({
-      name: category,
+    ([categoryId, amount]) => ({
+      name: categoryMap[categoryId] || categoryId, // Use category name, fallback to ID
       value: amount,
+      id: categoryId, // Keep the ID for color mapping
     })
   );
 
@@ -172,7 +186,7 @@ export function DashboardOverview({ accounts, transactions }) {
                     {pieChartData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
+                        fill={categoryColorMap[entry.id] || COLORS[index % COLORS.length]}
                       />
                     ))}
                   </Pie>

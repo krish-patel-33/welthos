@@ -38,7 +38,10 @@ export async function createAccount(data) {
     const user = await getUser();
     if (!user) throw new Error("Unauthorized");
 
+    // Get request data for Arcjet
     const req = await request();
+
+    // Check rate limit
     const decision = await aj.protect(req, {
       userId: user.id,
       requested: 1,
@@ -58,8 +61,6 @@ export async function createAccount(data) {
       }
       throw new Error("Request blocked");
     }
-
-
 
     const balanceFloat = parseFloat(data.balance);
     if (isNaN(balanceFloat)) {

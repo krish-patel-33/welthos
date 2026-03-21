@@ -1,6 +1,6 @@
 import { getUserAccounts } from "@/action/accounts";
 import { defaultCategories } from "@/data/categories";
-import { AddTransactionForm } from "../components/transaction-form";
+import { AddTransactionForm } from "../_components/transaction-form";
 import { getTransaction } from "@/action/transaction";
 
 export default async function AddTransactionPage({ searchParams }) {

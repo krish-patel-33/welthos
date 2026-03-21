@@ -11,7 +11,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const serializeAmount = (obj) => ({
   ...obj,
-  amount: obj.amount.toNumber(),
+  amount: obj.amount,
 });
 
 // Create Transaction
@@ -20,13 +20,13 @@ export async function createTransaction(data) {
     const user = await getUser();
     if (!user) throw new Error("Unauthorized");
 
-    // Get request data for ArcJet
+    // Get request data for Arcjet
     const req = await request();
 
     // Check rate limit
     const decision = await aj.protect(req, {
       userId: user.id,
-      requested: 1, // Specify how many tokens to consume
+      requested: 1,
     });
 
     if (decision.isDenied()) {
@@ -39,10 +39,8 @@ export async function createTransaction(data) {
             resetInSeconds: reset,
           },
         });
-
         throw new Error("Too many requests. Please try again later.");
       }
-
       throw new Error("Request blocked");
     }
 
@@ -59,7 +57,7 @@ export async function createTransaction(data) {
 
     // Calculate new balance
     const balanceChange = data.type === "EXPENSE" ? -data.amount : data.amount;
-    const newBalance = account.balance.toNumber() + balanceChange;
+    const newBalance = account.balance + balanceChange;
 
     // Create transaction and update account balance
     const transaction = await db.$transaction(async (tx) => {
@@ -128,8 +126,8 @@ export async function updateTransaction(id, data) {
     // Calculate balance changes
     const oldBalanceChange =
       originalTransaction.type === "EXPENSE"
-        ? -originalTransaction.amount.toNumber()
-        : originalTransaction.amount.toNumber();
+        ? -originalTransaction.amount
+        : originalTransaction.amount;
 
     const newBalanceChange =
       data.type === "EXPENSE" ? -data.amount : data.amount;
