@@ -104,7 +104,6 @@ export function AddTransactionForm({
       if (scannedData.category) {
         setValue("category", scannedData.category);
       }
-      toast.success("Receipt scanned successfully");
     }
   };
 
@@ -143,7 +142,7 @@ export function AddTransactionForm({
           <SelectTrigger>
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent side="bottom" sideOffset={4} position="popper">
             <SelectItem value="EXPENSE">Expense</SelectItem>
             <SelectItem value="INCOME">Income</SelectItem>
           </SelectContent>
@@ -177,7 +176,7 @@ export function AddTransactionForm({
             <SelectTrigger>
               <SelectValue placeholder="Select account" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent side="bottom" sideOffset={4} position="popper">
               {accounts.map((account) => (
                 <SelectItem key={account.id} value={account.id}>
                   {account.name} (${parseFloat(account.balance).toFixed(2)})
@@ -209,7 +208,7 @@ export function AddTransactionForm({
           <SelectTrigger>
             <SelectValue placeholder="Select category" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent side="bottom" sideOffset={4} position="popper">
             {filteredCategories.map((category) => (
               <SelectItem key={category.id} value={category.id}>
                 {category.name}
@@ -238,7 +237,7 @@ export function AddTransactionForm({
               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0" align="start" side="bottom" sideOffset={4}>
             <Calendar
               mode="single"
               selected={date}
@@ -289,7 +288,7 @@ export function AddTransactionForm({
             <SelectTrigger>
               <SelectValue placeholder="Select interval" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent side="bottom" sideOffset={4} position="popper">
               <SelectItem value="DAILY">Daily</SelectItem>
               <SelectItem value="WEEKLY">Weekly</SelectItem>
               <SelectItem value="MONTHLY">Monthly</SelectItem>
@@ -309,12 +308,12 @@ export function AddTransactionForm({
         <Button
           type="button"
           variant="outline"
-          className="w-full"
+          className="flex-1"
           onClick={() => router.back()}
         >
           Cancel
         </Button>
-        <Button type="submit" className="w-full" disabled={transactionLoading}>
+        <Button type="submit" className="flex-1 bg-black text-white hover:bg-black/90" disabled={transactionLoading}>
           {transactionLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

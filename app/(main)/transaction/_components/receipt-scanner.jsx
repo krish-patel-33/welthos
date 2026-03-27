@@ -1,36 +1,70 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useState } from "react";
 import { Camera, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import useFetch from "@/hooks/use-fetch";
 import { scanReceipt } from "@/action/transaction";
 
 export function ReceiptScanner({ onScanComplete }) {
   const fileInputRef = useRef(null);
-
-  const {
-    loading: scanReceiptLoading,
-    fn: scanReceiptFn,
-    data: scannedData,
-  } = useFetch(scanReceipt);
+  const [loading, setLoading] = useState(false);
 
   const handleReceiptScan = async (file) => {
+    console.log("Starting receipt scan, file:", file.name, file.type, file.size);
+
     if (file.size > 5 * 1024 * 1024) {
       toast.error("File size should be less than 5MB");
       return;
     }
 
-    await scanReceiptFn(file);
-  };
+    try {
+      setLoading(true);
 
-  useEffect(() => {
-    if (scannedData && !scanReceiptLoading) {
-      onScanComplete(scannedData);
-      toast.success("Receipt scanned successfully");
+      // Convert file to base64 on client side
+      const reader = new FileReader();
+
+      reader.onload = async (e) => {
+        try {
+          console.log("File read successfully, converting to base64...");
+          const base64String = e.target.result.split(',')[1]; // Remove data:image/xxx;base64, prefix
+          console.log("Base64 length:", base64String.length);
+
+          console.log("Calling scanReceipt server action...");
+          const scannedData = await scanReceipt({
+            base64: base64String,
+            mimeType: file.type,
+          });
+
+          console.log("Received scanned data:", scannedData);
+
+          if (scannedData) {
+            onScanComplete(scannedData);
+            toast.success("Receipt scanned successfully");
+          } else {
+            toast.error("Could not extract data from receipt");
+          }
+        } catch (error) {
+          console.error("Error scanning receipt:", error);
+          toast.error(error.message || "Failed to scan receipt");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      reader.onerror = () => {
+        console.error("FileReader error");
+        toast.error("Failed to read file");
+        setLoading(false);
+      };
+
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Error processing file:", error);
+      toast.error("Failed to process file");
+      setLoading(false);
     }
-  }, [scanReceiptLoading, scannedData]);
+  };
 
   return (
     <div className="flex items-center gap-4">
@@ -50,9 +84,9 @@ export function ReceiptScanner({ onScanComplete }) {
         variant="outline"
         className="w-full h-10 bg-gradient-to-br from-orange-500 via-pink-500 to-purple-500 animate-gradient hover:opacity-90 transition-opacity text-white hover:text-white"
         onClick={() => fileInputRef.current?.click()}
-        disabled={scanReceiptLoading}
+        disabled={loading}
       >
-        {scanReceiptLoading ? (
+        {loading ? (
           <>
             <Loader2 className="mr-2 animate-spin" />
             <span>Scanning Receipt...</span>
