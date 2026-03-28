@@ -7,7 +7,64 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import aj from "@/lib/arcjet";
 import { request } from "@arcjet/next";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const getGeminiApiKey = () =>
+  process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+
+const RECEIPT_MODEL_CANDIDATES = [
+  "gemini-1.5-flash-latest",
+  "gemini-1.5-pro-latest",
+  "gemini-pro-vision",
+];
+
+let discoveredReceiptModels = null;
+
+const isModelNotFoundError = (message) =>
+  message.includes("[404 Not Found]") ||
+  message.includes("is not found for API version") ||
+  message.includes("not supported for generateContent");
+
+const isImageUnsupportedError = (message) =>
+  message.includes("image") &&
+  (message.includes("not supported") ||
+    message.includes("invalid argument") ||
+    message.includes("inlineData"));
+
+async function discoverReceiptModels(apiKey) {
+  if (discoveredReceiptModels) return discoveredReceiptModels;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+  const response = await fetch(url, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`Failed to list Gemini models (${response.status}).`);
+  }
+
+  const payload = await response.json();
+  const listedModels =
+    payload?.models
+      ?.filter((model) =>
+        model?.supportedGenerationMethods?.includes("generateContent")
+      )
+      .map((model) => model?.name?.replace(/^models\//, ""))
+      .filter(Boolean) || [];
+
+  const prioritizedListedModels = listedModels.sort((a, b) => {
+    const score = (name) => {
+      const n = name.toLowerCase();
+      let s = 0;
+      if (n.includes("vision")) s += 4;
+      if (n.includes("flash")) s += 3;
+      if (n.includes("pro")) s += 2;
+      if (n.includes("1.5") || n.includes("2.0") || n.includes("2.5")) s += 1;
+      return s;
+    };
+    return score(b) - score(a);
+  });
+
+  discoveredReceiptModels = [
+    ...new Set([...RECEIPT_MODEL_CANDIDATES, ...prioritizedListedModels]),
+  ];
+  return discoveredReceiptModels;
+}
 
 const serializeAmount = (obj) => ({
   ...obj,
@@ -200,16 +257,14 @@ export async function getUserTransactions(query = {}) {
 // Scan Receipt
 export async function scanReceipt({ base64, mimeType }) {
   try {
-    console.log("Starting receipt scan...");
-
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error("GEMINI_API_KEY is not configured in environment variables");
+    const apiKey = getGeminiApiKey();
+    if (!apiKey) {
+      throw new Error(
+        "Missing Gemini API key. Set GEMINI_API_KEY (or GOOGLE_API_KEY) and restart the server."
+      );
     }
 
-    // Use gemini-pro-vision for image analysis (stable version)
-    const model = genAI.getGenerativeModel({
-      model: "gemini-pro-vision",
-    });
+    const genAI = new GoogleGenerativeAI(apiKey);
 
     const prompt = `Analyze this receipt image and extract the following information in JSON format:
 - Total amount (just the number)
@@ -229,23 +284,44 @@ Only respond with valid JSON in this exact format:
 
 If its not a recipt, return an empty object`;
 
-    console.log("Calling Gemini API...");
+    const modelCandidates = await discoverReceiptModels(apiKey);
+    let text = "";
+    let modelLookupError = null;
 
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          data: base64,
-          mimeType: mimeType,
-        },
-      },
-    ]);
+    for (const modelName of modelCandidates) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent([
+          prompt,
+          {
+            inlineData: {
+              data: base64,
+              mimeType: mimeType,
+            },
+          },
+        ]);
 
-    console.log("Received response from Gemini");
+        text = result.response.text();
+        break;
+      } catch (modelError) {
+        const modelErrorMessage = modelError?.message || "";
+        if (isModelNotFoundError(modelErrorMessage)) {
+          modelLookupError = modelError;
+          continue;
+        }
+        if (isImageUnsupportedError(modelErrorMessage)) {
+          modelLookupError = modelError;
+          continue;
+        }
+        throw modelError;
+      }
+    }
 
-    const response = await result.response;
-    const text = response.text();
-    console.log("Gemini response text:", text);
+    if (!text) {
+      throw new Error(
+        `No compatible Gemini model available for receipt scanning. ${modelLookupError?.message || ""}`.trim()
+      );
+    }
 
     const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
 
@@ -257,8 +333,6 @@ If its not a recipt, return an empty object`;
         throw new Error("This does not appear to be a receipt");
       }
 
-      console.log("Successfully parsed receipt data:", data);
-
       return {
         amount: parseFloat(data.amount),
         date: new Date(data.date).toISOString(),
@@ -267,14 +341,26 @@ If its not a recipt, return an empty object`;
         merchantName: data.merchantName || "",
       };
     } catch (parseError) {
-      console.error("Error parsing JSON response:", parseError);
-      console.error("Raw response:", cleanedText);
+      console.error("Error parsing JSON response:", parseError, cleanedText);
       throw new Error("Could not extract receipt information. Please try another image.");
     }
   } catch (error) {
     console.error("Error scanning receipt:", error);
-    console.error("Error details:", error.message, error.stack);
-    throw new Error(error.message || "Failed to scan receipt");
+
+    const message = error?.message || "";
+    if (message.includes("API key not valid")) {
+      throw new Error("Your Gemini API key is invalid. Please update it in .env and restart the server.");
+    }
+
+    if (message.includes("permission") || message.includes("403")) {
+      throw new Error("Gemini API access denied. Verify API key permissions and billing/quota.");
+    }
+
+    if (message.includes("No compatible Gemini model available")) {
+      throw new Error("Gemini model unavailable for this API key/project. Enable Gemini API and try again.");
+    }
+
+    throw new Error(message || "Failed to scan receipt");
   }
 }
 
