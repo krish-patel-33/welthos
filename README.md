@@ -1,36 +1,153 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Welthos
+
+Welthos is an AI-assisted personal finance tracker built with Next.js 15, React 19, Prisma, and MongoDB. It helps users manage accounts, track income and expenses, set budgets, scan receipts with Gemini, and receive automated email reports and alerts.
+
+## Highlights
+
+- Secure JWT-based authentication with protected routes
+- Multi-account money tracking with default account support
+- Transaction management for income, expenses, and recurring entries
+- Budget monitoring with monthly progress and automated alert emails
+- AI-powered receipt scanning using Gemini
+- Automated monthly reports and recurring transaction processing with Inngest
+- Bot protection and rate limiting with Arcjet
+- Dashboard views with charts and account-level transaction history
+
+## Tech Stack
+
+- Next.js 15 App Router
+- React 19
+- Prisma ORM
+- MongoDB
+- Tailwind CSS 4
+- Radix UI
+- Inngest
+- Resend
+- Google Gemini API
+- Arcjet
+
+## Project Structure
+
+```text
+app/                 App Router pages, layouts, and API routes
+action/              Server actions for accounts, budgets, dashboard, and transactions
+components/          Shared UI and feature components
+emails/              React email templates
+lib/                 Auth, Prisma, JWT, Arcjet, and Inngest utilities
+prisma/              Prisma schema and migrations
+public/              Static assets
+scripts/             Local scripts such as standalone seed helpers
+```
+
+## Core Features
+
+### Authentication
+
+- Sign up, sign in, sign out, and current-user session endpoints
+- Password reset flow with reset-token support
+- JWT cookie authentication enforced in middleware
+
+### Accounts and Transactions
+
+- Create current and savings accounts
+- Mark one account as the default account
+- Add, edit, list, and bulk-delete transactions
+- Support recurring transactions with scheduled background processing
+
+### Insights and Automation
+
+- Scan receipt images and extract amount, merchant, date, and category
+- Generate monthly financial insights with Gemini
+- Send monthly report emails
+- Check budget usage and send alert emails automatically
 
 ## Getting Started
 
-First, run the development server:
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure environment variables
+
+Create a local `.env` file from `.env.example` and fill in your own values.
+
+Required variables:
+
+```env
+DATABASE_URL=
+JWT_SECRET=
+RESEND_API_KEY=
+GEMINI_API_KEY=
+INNGEST_EVENT_KEY=
+INNGEST_SIGNING_KEY=
+ARCJET_KEY=
+```
+
+### 3. Generate Prisma client
+
+```bash
+npx prisma generate
+```
+
+### 4. Start the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Database
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This project uses Prisma with MongoDB.
 
-## Learn More
+Useful commands:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npx prisma generate
+npx prisma db push
+npx prisma studio
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Background Jobs
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Inngest powers:
 
-## Deploy on Vercel
+- recurring transaction processing
+- monthly financial report generation
+- budget alert checks
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The app exposes an Inngest route at `app/api/inngest/route.js`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Email and AI Integrations
+
+- `Resend` is used to deliver emails
+- `Gemini` is used for receipt scanning and monthly financial insights
+- `Arcjet` is used for bot protection, shielding, and token-bucket rate limiting
+
+## Available Scripts
+
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
+```
+
+## Notes for Development
+
+- Route protection is handled in `middleware.js`
+- Receipt scanning depends on a valid Gemini API key and model access
+- Some seed helpers in this repository contain hard-coded IDs and are best treated as local development utilities, not production tooling
+
+## Recommended Improvements
+
+- Add automated tests for auth, transactions, and receipt scanning
+- Add a proper seed command wired into `package.json`
+- Add deployment instructions for Vercel or Docker
+
+## License
+
+No license has been specified yet.
